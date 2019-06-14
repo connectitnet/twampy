@@ -28,6 +28,7 @@ class SessionReflector(udpSession):
     def run(self):
         index = {}
         reset = {}
+        pbytes = {}
 
         while self.running:
             try:
@@ -46,21 +47,21 @@ class SessionReflector(udpSession):
                 idx = 0
                 if address not in index.keys():
                     logger.info("set rseq:=0     (new remote address/port)")
+                    pbytes[address]=b''
                 elif reset[address] < t2:
                     logger.info("reset rseq:=0   (session timeout, 30sec)")
                 elif sseq == 0:
                     logger.info("reset rseq:=0   (received sseq==0)")
+                    pbytes[address]=b''
                 else:
                     idx = index[address]
 
                 rdata = struct.pack('!L2I2H2I', idx, sec, msec, 0x001, 0, sec, msec)
-                if data_len > len(rdata):
+                if not pbytes[address] and data_len > len(rdata):
                     padding = int(data_len-len(rdata)-14)
-                    logger.debug('Padding: %d zero bytes' % padding )
-                    pbytes = generate_zero_bytes(padding)
-                else:
-                    pbytes=b''
-                self.sendto(rdata + data[0:14] + pbytes, address)
+                    logger.debug('padding: %d zero bytes' % padding )
+                    pbytes[address] = generate_zero_bytes(padding)
+                self.sendto(rdata + data[0:14] + pbytes[address], address)
 
                 index[address] = idx + 1
                 reset[address] = t2 + 30  # timeout is 30sec

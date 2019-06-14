@@ -171,7 +171,9 @@ def controlclient(sender, server):
 @cli.command('reflector')
 @near_end_argument
 def reflector(near_end):
-
+    """
+        Starts a TWAMP lite Session Reflector
+    """
     reflector = SessionReflector(near_end)
     reflector.setDaemon(True)
     reflector.setName("twl_reflector")
