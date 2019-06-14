@@ -1,11 +1,22 @@
+#!/usr/bin/env python3
+
+from twampy.constants import DSCP_MAP, INTERVAL_DEFAULT, TTL_DEFAULT, TOS_DEFAULT, DSCP_DEFAULT, COUNT_DEFAULT, PADDING_DEFAULT, TWAMP_PORT_DEFAULT, TWAMP_CTRL_PORT_DEFAULT
+from twampy.controlclient import ControlClient
+from twampy.sessionreflector import SessionReflector
+from twampy.sessionsender import SessionSender
+from twampy.utils import parse_addr
+
 import click
 import click_log
 import click_spinner
 import os
+import signal
 import sys
+import time
 import functools
 
 from logging.handlers import TimedRotatingFileHandler
+
 
 import logging
 logger = logging.getLogger(__name__)
@@ -37,16 +48,33 @@ class AliasedGroup(click.Group):
             return None
         elif len(matches) == 1:
             return click.Group.get_command(self, ctx, matches[0])
-        ctx.fail('Too many matches: %s' % ', '.join(sorted(matches)))
+        ctx.fail('Please be more specific \n%s' % '\n'.join(sorted(matches)))
 
 
-def ip_params(func):
-    @click.option("--tos", metavar="<type-of-service>", default="0x88", type=HexParamType(), help='IP TOS value in hex format. ex.: 0x88')
-    @click.option("--dscp", metavar="<dscp-value>", help='IP DSCP value')
-    @click.option("--ttl", metavar="<time-to-live>", default=64, type=click.IntRange(1, 128), help='[1..128]')
-    @click.option("--padding", metavar="<bytes>", default=0, type=int, help='IP/UDP mtu value')
+near_end_argument = click.argument(
+    'near_end', metavar='local-ip:port', default=":20001")
+count_option = click.option('-c', '--count', metavar='packets', default=COUNT_DEFAULT,
+                            type=click.IntRange(1, 9999, True), help="[1..9999]")
+
+
+def ip_options(func):
+    @click.option("--tos", metavar="<type-of-service>", default=str(TOS_DEFAULT), type=HexParamType(), help='IP TOS value in hex format. ex.: 0x88')
+    @click.option("--dscp", metavar="<dscp-value>", type=click.Choice(DSCP_MAP.keys()), help='IP DSCP value')
+    @click.option("--ttl", metavar="<time-to-live>", default=TTL_DEFAULT, type=click.IntRange(1, 128), help='[1..128]')
+    # TODO: CONFIRM THIS
+    @click.option("--padding", metavar="<bytes>", default=PADDING_DEFAULT, type=int, help='IP/UDP packet size')
     @click.option("--do-not-fragment",  is_flag=True, help='Set do-not-fragment flag on IP packets')
     @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        return func(*args, **kwargs)
+    return wrapper
+
+
+def twampy_params(func):
+    @near_end_argument
+    @click.argument('far_end', metavar='remote-ip:port', default="127.0.0.1:20001")
+    @count_option
+    @click.option('-i', '--interval', metavar='msec', default=INTERVAL_DEFAULT,  type=click.IntRange(100, 1000, True), help="[100,1000]")
     def wrapper(*args, **kwargs):
         return func(*args, **kwargs)
     return wrapper
@@ -72,37 +100,90 @@ def cli(quiet, logfile):
         file_handler.setLevel(loglevel)
         click_logger.addHandler(file_handler)
 
-# sender
-@cli.command()
-@ip_params
+# TODO: sender
+#@cli.command('sender')
+@twampy_params
+@ip_options
 def sender(tos, dscp, ttl, padding, do_not_fragment):
+    # sender = SessionSender(args)
+    # sender.setDaemon(True)
+    # sender.setName("twl_responder")
+    # sender.start()
+
+    # signal.signal(signal.SIGINT, sender.stop)
+
+    # while sender.isAlive():
+    #     time.sleep(0.1)
     pass
 
-# controller
-@cli.command()
-def controller(tos, dscp, ttl, padding, do_not_fragment):
+
+# TODO: controller
+#@cli.command('controller')
+@twampy_params
+@ip_options
+def controller(near_end, far_end, count, interval, tos, dscp, ttl, padding, do_not_fragment):
+    # sip, spt, ipv = parse_addr(near_end, 20000)
+    # rip, rpt, ipv = parse_addr(far_end,  20001)
+
+    # client = ControlClient(server=rip, ipversion=ipv)
+    # client.connectionSetup()
+
+    # if client.reqSession(s_port=spt, r_port=rpt):
+    #     client.startSessions()
+
+    #     # sender = SessionSender(args)
+    #     sender.setDaemon(True)
+    #     sender.setName("twl_responder")
+    #     sender.start()
+    #     signal.signal(signal.SIGINT, sender.stop)
+
+    #     while sender.isAlive():
+    #         time.sleep(0.1)
+    #     time.sleep(5)
+
+    #     client.stopSessions()
     pass
 
-# client
-@cli.command()
-def client(tos, dscp, ttl, padding, do_not_fragment):
+# TODO: client
+#@cli.command('client')
+@click.argument('sender', metavar='twamp-sender-ip:port', default="127.0.0.1:20001")
+@click.argument('server', metavar='twamp-server-ip:port', default=":20000")
+def controlclient(sender, server):
+    # with click_spinner.spinner():
+    #     # Session Sender / Session Reflector:
+    #     #  get Address, UDP port, IP version from twamp sender/server attributes
+    #     sip, spt, ipv = parse_addr(sender, TWAMP_CTRL_PORT_DEFAULT)
+    #     rip, rpt, ipv = parse_addr(server, TWAMP_PORT_DEFAULT)
+
+    #     client = ControlClient(server=rip)
+    #     client.connectionSetup()
+
+    # #    if client.reqSession(sender=sip, s_port=spt, receiver=rip, r_port=rpt):
+    #     if client.reqSession(sender=sip, s_port=spt, receiver="0.0.0.0", r_port=rpt):
+    #         client.startSessions()
+
+    #         while True:
+    #             time.sleep(0.1)
+
+    #         client.stopSessions()
     pass
 
 # responder
-@cli.command()
-@click.argument('near_end', metavar='local-ip:port', default=":20001")
-@click.option('--timer', metavar='value', default=0, type=int, help='TWL session reset')
-@ip_params
-def responder(near_end, timer, tos, dscp, ttl, padding, do_not_fragment):
-    reflector = SessionReflector(args)
-    reflector.setDaemon(True)
-    reflector.setName("twl_responder")
-    reflector.start()
+@cli.command('reflector')
+@near_end_argument
+@ip_options
+def reflector(near_end, tos, dscp, ttl, padding, do_not_fragment):
+    with click_spinner.spinner():
+        reflector = SessionReflector(
+            near_end, tos, dscp, ttl, padding, do_not_fragment)
+        reflector.setDaemon(True)
+        reflector.setName("twl_reflector")
+        reflector.start()
 
-    signal.signal(signal.SIGINT, reflector.stop)
+        signal.signal(signal.SIGINT, reflector.stop)
 
-    while reflector.isAlive():
-        time.sleep(0.1)
+        while reflector.isAlive():
+            time.sleep(0.1)
 
 
 if __name__ == "__main__":

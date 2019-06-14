@@ -1,3 +1,4 @@
 -r requirements.txt
+ipython
 pylint
 autopep8

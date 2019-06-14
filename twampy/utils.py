@@ -1,9 +1,10 @@
 import time
 import sys
 import struct
+import socket
 
+from twampy.constants import TIMEOFFSET, ALLBITS
 
-from twamp.constants import TIMEOFFSET, ALLBITS
 
 def parse_addr(addr, port=20000):
     """ Parse IP addresses and ports.
@@ -48,3 +49,23 @@ def time_ntp2py(data):
     ta, tb = struct.unpack('!2I', data)
     t = ta - TIMEOFFSET + float(tb) / float(ALLBITS)
     return t
+
+
+def generate_zero_bytes(nbr):
+    return struct.pack('!%sB' % nbr, *[0 for x in range(nbr)])
+
+
+def format_time(ms):
+    if abs(ms) > 60000:
+        return "%7.1fmin" % float(ms / 60000)
+    if abs(ms) > 10000:
+        return "%7.1fsec" % float(ms / 1000)
+    if abs(ms) > 1000:
+        return "%7.2fsec" % float(ms / 1000)
+    if abs(ms) > 1:
+        return "%8.2fms" % ms
+    return "%8dus" % int(ms * 1000)
+
+
+# def get_addr_info(addr, inet_family=4):
+#     addresses = socket.getaddrinfo()

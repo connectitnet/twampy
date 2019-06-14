@@ -84,3 +84,20 @@ DSCP_MAP = {"be":   0, "cp1":   1,  "cp2":  2,  "cp3":  3, "cp4":   4, "cp5":   
             "nc1": 48, "cp49": 49, "cp50": 50, "cp51": 51, "cp52": 52, "cp53": 53, "cp54": 54, "cp55": 55,
             "nc2": 56, "cp57": 57, "cp58": 58, "cp59": 59, "cp60": 60, "cp61": 61, "cp62": 62, "cp63": 63}
 
+### Defaults
+TIMEOUT_DEFAULT = 30
+
+INTERVAL_DEFAULT = 100
+
+TOS_DEFAULT = 0x88
+DSCP_DEFAULT = 'be'
+TTL_DEFAULT = 64
+PADDING_DEFAULT = 0
+
+COUNT_DEFAULT = 100
+
+TWAMP_PORT_DEFAULT = 20001
+TWAMP_CTRL_PORT_DEFAULT = 862
+
+NEAR_END_DEFAULT = ":20001"
+FAR_END_DEFAULT = "127.0.0.1:20001"
