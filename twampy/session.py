@@ -4,7 +4,7 @@ import sys
 import threading
 
 import logging
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("twampy")
 
 class udpSession(threading.Thread):
 
@@ -51,7 +51,7 @@ class udpSession(threading.Thread):
         logger.info("Wait to receive test packets on [%s]:%d", addr, port)
 
     def sendto(self, data, address):
-        logger.debug("transmit: %s", binascii.hexlify(data))
+        logger.debug("transmit: %s, len=%dbytes", binascii.hexlify(data), len(data))
         self.socket.sendto(data, address)
 
     def recvfrom(self):
@@ -60,7 +60,7 @@ class udpSession(threading.Thread):
         return data, address
 
     def stop(self, signum, frame):
-        logger.info("SIGINT received: Stop TWL session reflector")
+        logger.info("SIGINT received: Stop TWL session")
         # if self.running and self.socket.
         self.running = False
         self.socket.shutdown(socket.SHUT_RDWR)

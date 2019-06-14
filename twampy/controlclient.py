@@ -3,16 +3,16 @@ import socket
 import struct
 
 from twampy.utils import generate_zero_bytes, now
-from twampy.constants import TIMEOFFSET, TWAMP_CTRL_PORT_DEFAULT, TOS_DEFAULT, TIMEOUT_DEFAULT
+from twampy.constants import TIMEOFFSET, TWAMP_PORT_DEFAULT, TOS_DEFAULT, TIMEOUT_DEFAULT
 
 import logging
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("twampy")
 
 
 class ControlClient:
 
     
-    def __init__(self, server, tcp_port=TWAMP_CTRL_PORT_DEFAULT, timeout=TIMEOUT_DEFAULT, tos=TOS_DEFAULT, source_address=None):
+    def __init__(self, server, port=TWAMP_PORT_DEFAULT, timeout=TIMEOUT_DEFAULT, tos=TOS_DEFAULT, source_address=None):
         self.socket = socket.create_connection((server,tcp_port), timeout, source_address)
         pass
 

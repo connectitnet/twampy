@@ -10,7 +10,7 @@ from twampy.constants import TIMEOFFSET, ALLBITS
 
 
 import logging
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("twampy")
 
 
 class SessionSender(udpSession):
